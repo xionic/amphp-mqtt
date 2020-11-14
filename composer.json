@@ -1,5 +1,5 @@
 {
-    "name": "markkimsal/amphp-mqtt",
+    "name": "xionic/amphp-mqtt",
     "description": "Async MQTT client for Amp.",
     "license": "MIT",
     "authors": [
