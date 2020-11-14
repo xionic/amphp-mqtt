@@ -18,8 +18,8 @@
     "require": {
         "evenement/evenement": "~3.0",
         "amphp/amp": "^2",
-        "amphp/socket": "^0.10",
-        "amphp/uri": "^0.1"
+        "amphp/socket": ">=0.10",
+        "amphp/uri": ">=0.1"
     },
     "config": {
         "platform": {
