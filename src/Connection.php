@@ -3,7 +3,7 @@
 namespace MarkKimsal\Mqtt;
 
 use Amp\Deferred;
-use Amp\Socket\ClientConnectContext;
+use Amp\Socket\ConnectContext;
 use Amp\Socket\ClientTlsContext;
 use Amp\Socket\Socket;
 use Amp\Success;
@@ -111,10 +111,10 @@ class Connection implements EventEmitterInterface {
 			//the client will already be sending "connect"
 			//because the stream_enable_crypto is scheduled
 			//for next tick
-			$socketPromise = cryptoConnect($this->uri, (new ClientConnectContext)->withConnectTimeout($this->timeout),
+			$socketPromise = cryptoConnect($this->uri, (new ConnectContext)->withConnectTimeout($this->timeout),
 			(new ClientTlsContext)->withoutPeerVerification());
 		} else {
-			$socketPromise = connect($this->uri, (new ClientConnectContext)->withConnectTimeout($this->timeout));
+			$socketPromise = connect($this->uri, (new ConnectContext)->withConnectTimeout($this->timeout));
 		}
 
 		$socketPromise->onResolve(function ($error, $socket) {

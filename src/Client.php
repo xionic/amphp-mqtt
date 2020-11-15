@@ -213,7 +213,7 @@ class Client implements EventEmitterInterface {
 
 			$deferred = new Deferred();
 			//wrap final callback in pubrel auto-generating callback
-			$sendp = $this->send( $packet , function($err, $result) use($client, $deferred) {
+			$sendp = $this->send( $packet , function($err, $result) use($client, $deferred, $callback) {
 				if ($err) {
 					$callback($err);
 					$deferred->fail($err);
@@ -231,7 +231,9 @@ class Client implements EventEmitterInterface {
 				});
 			});
 			$qosPromise = $deferred->promise();
-			$qosPromise->onResolve($callback);
+			if($callback != null){
+				$qosPromise->onResolve($callback);
+			}
 			return $qosPromise;
 		}
 		if ($qos == 1) {
