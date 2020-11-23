@@ -1,3 +1,5 @@
+# Updated to work with newer version of AMP libraries
+
 # MQTT
 
 `markkimsal/amphp-mqtt` is an asynchronous MQTT client for PHP based on Amp.
