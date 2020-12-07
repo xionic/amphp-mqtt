@@ -41,7 +41,7 @@ class Connection implements EventEmitterInterface {
 		$this->applyUri($uri);
 		$this->parser = new Parser(function ($response) {
 
-			if ($response instanceof BadFormatException) {
+			if ($response instanceof \Exception) {
 				$this->onError($response);
 			}
 
@@ -111,8 +111,7 @@ class Connection implements EventEmitterInterface {
 			//the client will already be sending "connect"
 			//because the stream_enable_crypto is scheduled
 			//for next tick
-			$socketPromise = cryptoConnect($this->uri, (new ConnectContext)->withConnectTimeout($this->timeout),
-			(new ClientTlsContext)->withoutPeerVerification());
+			$socketPromise = connect($this->uri, (new ConnectContext)->withConnectTimeout($this->timeout)->withTlsContext((new ClientTlsContext(""))->withoutPeerVerification()));
 		} else {
 			$socketPromise = connect($this->uri, (new ConnectContext)->withConnectTimeout($this->timeout));
 		}

@@ -5,9 +5,11 @@ namespace MarkKimsal\Mqtt;
 use Amp\Uri\Uri;
 use Amp\Deferred;
 use Amp\Promise;
-use Amp\Succes;
+use Amp\Success;
 use Evenement\EventEmitterTrait;
 use Evenement\EventEmitterInterface;
+use Monolog\Logger;
+use Monolog\Handler\NullHandler;
 use function Amp\call;
 
 
@@ -35,6 +37,9 @@ class Client implements EventEmitterInterface {
 	/** @var array */
 	protected $queue = [];
 
+	/** @var logger */
+	protected $logger;
+
 	protected $connackReceived    = false;
 	protected $isConnected        = false;
 	protected $connackPromisor    = null;
@@ -43,23 +48,32 @@ class Client implements EventEmitterInterface {
 	protected $username           = '';
 	protected $password           = '';
 
-	public function __construct(string $uri) {
+	public function __construct(string $uri, ?Logger $logger = null) {
+
+		if($logger == null){
+			$this->logger = new Logger("MQTTNULLLOGGER");
+			$this->logger->pushHandler(new NullHandler());
+		} else {
+			$this->logger = $logger;
+		}
+		
 		$this->applyUri($uri);
 
 		$this->deferreds = [];
 
 		$this->connection = new Connection($uri);
+		
 
 		$this->connection->on("response", function ($response) {
 			if ($pid = $response->getId()) {
-				echo "D/Client: Message ($pid) got: ".get_class($response)."\n";
+				$this->logger->debug("D/Client: Message ($pid) got: ".get_class($response));
 				$deferred = $this->deferredsById[$pid];
 				//must unset here because
 				//some packets send new packets with same ID
 				//during their onResolve
 				unset($this->deferredsById[$pid]);
 			} else {
-				echo "D/Client: Response is untracked deferred: ".get_class($response)."\n";
+				$this->logger->debug("D/Client: Response is untracked deferred: ".get_class($response));
 				$deferred = array_shift($this->deferreds);
 			}
 
@@ -78,7 +92,7 @@ class Client implements EventEmitterInterface {
 			}
 		});
 
-		$this->connection->on('close', function (Throwable $error = null) {
+		$this->connection->on('close', function (\Throwable $error = null) {
 			if ($this->connackPromisor) {
 				$this->connackPromisor->fail(new \Exception('closing socket'));
 			}
@@ -97,7 +111,7 @@ class Client implements EventEmitterInterface {
 			}
 		});
 
-		$this->connection->on('error', function (Throwable $error = null) {
+		$this->connection->on('error', function (\Throwable $error = null) {
 			if ($error) {
 				// Fail any outstanding promises
 				while ($this->deferreds) {
@@ -111,17 +125,17 @@ class Client implements EventEmitterInterface {
 		if (count($this->topicList) && !empty($this->topicList)) {
 			$this->connection->on("connect", function () {
 				$promiseList = $this->subscribeToAll($this->topicList, function($err, $resp) {
-					#echo "Got subscribe to all response.\n";
+					#$this->logger->debug("Got subscribe to all response.\n";
 				});
 			});
 		}
 
 		$this->connection->on("open", function () {
-			//echo "D/Client: socket is open.\n";
+			//$this->logger->debug("D/Client: socket is open.\n";
 		});
 
 		$this->connection->on("connect", function ($response) {
-			//echo "D/Client: connack received: ".get_class($response)."\n";
+			//$this->logger->debug("D/Client: connack received: ".get_class($response));
 			$this->connackReceived = true;
 			$this->isConnected     = true;
 			$this->connackPromisor->resolve();
@@ -151,7 +165,7 @@ class Client implements EventEmitterInterface {
 			}
 			$packet = new Packet\Connect();
 			if (!$this->enableCleanSession && !$this->clientId) {
-				echo "W/Client: Establishing a session without a clientId is not allowed. Enabling clean session.\n";
+				$this->logger->debug("W/Client: Establishing a session without a clientId is not allowed. Enabling clean session");
 				$this->enableCleanSession = true;
 			}
 			if ($this->username) {
@@ -309,7 +323,7 @@ class Client implements EventEmitterInterface {
 
 		}
 		if($pid = $packet->getId()) {
-			echo "D/Client: Message ($pid) sending: ".get_class($packet)."\n";
+			$this->logger->debug("D/Client: Message ($pid) sending: ".get_class($packet));
 		}
 		$p = $this->_asyncsend($packet);
 		if ($callback) {
@@ -326,10 +340,10 @@ class Client implements EventEmitterInterface {
 		$deferred = new Deferred();
 		if($pid = $packet->getId()) {
 
-			echo "D/Client: Message ($pid) sending: ".get_class($packet)."\n";
+			$this->logger->debug("D/Client: Message ($pid) sending: ".get_class($packet));
 			$this->deferredsById[$pid] = $deferred;
 		} else {
-			echo "D/Client: Adding untracked deferred for packet: ". get_class($packet)."\n";
+			$this->logger->debug("D/Client: Adding untracked deferred for packet: ". get_class($packet));
 			$this->deferreds[] = $deferred;
 		}
 		$promise = $deferred->promise();

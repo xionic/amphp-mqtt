@@ -73,9 +73,9 @@ class Factory {
 		}
 
 		if ($packet == NULL) {
-			echo "D/Factory: hdr ";
+			//echo "D/Factory: hdr ";
 			dumphex($hdr);
-			echo "D/Factory: data \n";
+			//echo "D/Factory: data \n";
 			dumphex($data);
 			throw new \Exception('Unknown packet of type: '.$highbit);
 
