@@ -221,8 +221,11 @@ class Client implements EventEmitterInterface {
 		$packet->setTopic($topic);
 		if ($qos < 1) {
 			return $this->sendAndForget( $packet , $callback );
-		}
-		if ($qos == 2) {
+
+		} else if ($qos == 1) {
+			return $this->send($packet, $callback);
+			
+		} else if ($qos == 2) {
 			$client = $this;
 
 			$deferred = new Deferred();
@@ -250,9 +253,7 @@ class Client implements EventEmitterInterface {
 			}
 			return $qosPromise;
 		}
-		if ($qos == 1) {
-			return $this->send( $packet , $callback);
-		}
+		
 	}
 
 	public function publishRetain($msg, $topic, $qos=0, $callback=NULL) {

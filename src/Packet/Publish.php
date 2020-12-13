@@ -13,8 +13,7 @@ class Publish extends Base {
 
 	public function __construct() {
 
-		$pid = rand(1,10000);
-		$this->setId($pid);
+		$this->setId(self::genId());
 	}
 
 	public function fromNetwork($hdr, $data) {

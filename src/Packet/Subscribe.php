@@ -14,9 +14,9 @@ class Subscribe extends Base {
 	public $flagWillQos2     = 0x10;
 	public $qos              = 0x02;
 
-	public function __construct() {
-		$pid = rand(1,10000);
-		$this->setId($pid);
+	public function __construct() {	
+			
+		$this->setId(self::genId());
 	}
 
 	/**

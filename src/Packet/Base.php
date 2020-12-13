@@ -7,6 +7,7 @@ use function MarkKimsal\Mqtt\dumphex;
 class Base {
 
 	public $id = '';
+	private static $idsInUse = [];
 
 	public function fromNetwork($hdr, $data) {
 	}
@@ -26,6 +27,17 @@ class Base {
 
 	public function dumphex($data) {
 		dumphex($data);
+	}
+
+	public static function genId(){
+		$tryCount = 0;
+		while(in_array(($id = rand(1,65535)), self::$idsInUse)){
+			$tryCount++;
+			if($tryCount > 65535){
+				throw new \Exception("MQTT Base could not generate an ID - all in use"); 
+			}
+		}
+		return $id;
 	}
 
 	/**
